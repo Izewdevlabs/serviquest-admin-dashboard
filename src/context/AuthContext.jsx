@@ -1,20 +1,19 @@
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
-
+import * as jwtDecode from "jwt-decode"; // ✅ works with jwt-decode v4+
 
 // Create Auth Context
 const AuthContext = createContext();
 
-// Provider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
 
-  // Decode token to extract user info
+  // Decode token and set user when token changes
   useEffect(() => {
     if (token) {
       try {
-        const decoded = jwtDecode(token);
+        const decoded = jwtDecode.jwtDecode(token);
         setUser(decoded);
         localStorage.setItem("token", token);
       } catch (err) {
@@ -27,10 +26,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  // Login function
+  // ✅ Login helper
   const login = (jwtToken) => {
     try {
-      const decoded = jwtDecode(jwtToken);
+      const decoded = jwtDecode.jwtDecode(jwtToken);
       setUser(decoded);
       setToken(jwtToken);
       localStorage.setItem("token", jwtToken);
@@ -39,19 +38,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
+  // ✅ Logout helper
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
+    window.location.href = "/login";
   };
 
+  // ✅ Provide everything Login.jsx needs
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, setToken, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use Auth Context
+// ✅ Hook for accessing context
 export const useAuth = () => useContext(AuthContext);

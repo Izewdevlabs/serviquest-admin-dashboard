@@ -1,10 +1,10 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "http://localhost:5000/api", // adjust if backend URL changes
 });
 
-// Add JWT token if available
+// ✅ Automatically attach token to all requests
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -12,5 +12,18 @@ axiosClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// ✅ Handle expired/invalid tokens globally
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 403) {
+      console.warn("🔒 Token expired or invalid — redirecting to login...");
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default axiosClient;
